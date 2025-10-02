@@ -1,0 +1,43 @@
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.decomposition import PCA
+from sklearn.svm import SVC
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from sklearn.metrics import accuracy_score
+
+X = np.concatenate((np.array(v_coupled), np.array(v_uncoupled)))
+y = np.concatenate((np.ones(49), np.zeros(49)))
+pca = PCA(n_components=3)
+X_pca = pca.fit_transform(X)
+
+# Split into training and testing
+X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
+
+clf = SVC(kernel='linear')
+cv_scores = cross_val_score(clf, X_pca, y, cv=5)
+print(f"Cross-Validation Scores: {cv_scores}")
+print(f"Average Accuracy: {np.mean(cv_scores):.2f} (± {np.std(cv_scores):.2f})")
+
+clf.fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Test Accuracy: {accuracy:.2f}")
+
+fig = plt.figure(figsize=(8, 6))
+ax = fig.add_subplot(111, projection='3d')
+
+ax.scatter(X_test[:, 0], X_test[:, 1], X_test[:, 2], c=y_test, cmap=plt.cm.Paired, s=50)
+ax.scatter(X_train[:, 0], X_train[:, 1], X_train[:, 2], c=y_train, cmap=plt.cm.Paired, marker='x', s=100, label='Training Points')
+
+xx, yy = np.meshgrid(np.linspace(X_test[:, 0].min(), X_test[:, 0].max(), 100),
+                     np.linspace(X_test[:, 1].min(), X_test[:, 1].max(), 100))
+Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel(), np.zeros_like(xx.ravel())])
+Z = Z.reshape(xx.shape)
+ax.contour(xx, yy, Z, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])
+
+ax.set_xlabel('Principal Component 1')
+ax.set_ylabel('Principal Component 2')
+ax.set_zlabel('Principal Component 3')
+ax.set_title('SVM Decision Boundary in 3D')
+
+plt.show()
