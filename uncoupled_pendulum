@@ -1,0 +1,72 @@
+##### Uncoupled Pendulums
+##### generate a batch of sythetic data and concatenate the two components in each
+##### generate PD arrays
+
+#L = 1
+#I = L * L /9.81
+#w_0 = math.sqrt(L/I)
+T = 30
+spacing = 20
+t = np.linspace(0, T, T*spacing)
+theta_uncoupled = []
+phi_uncoupled = []
+data_combined_uncoupled = []
+data_embedded_uncoupled = []
+periodic_persistence_diagrams_uncoupled = []
+PersL_uncoupled = []
+v_uncoupled = []
+
+
+##### sliding window setup
+embedding_dimension_periodic = 6
+embedding_time_delay_periodic = 5
+stride = 2
+STE=SingleTakensEmbedding(parameters_type="fixed", time_delay=embedding_time_delay_periodic,
+    dimension=embedding_dimension_periodic,stride=stride)
+
+# PH
+homology_dimensions = [0,1,2]
+periodic_persistence = VietorisRipsPersistence(homology_dimensions=homology_dimensions, n_jobs=6)
+
+# PL
+pl = PersistenceLandscape(n_layers=15, n_bins=50, n_jobs=None)
+
+for k in range(1,50):
+  w_1 = random.uniform(2.5, 8.5)
+  w_2 = random.uniform(2.5, 8.5)
+  phase = random.uniform(0, 6.28)
+  theta_uncoupled.append(np.cos( w_1 * t ))
+  phi_uncoupled.append(np.cos( w_2 * t + phase))
+  theta_uncoupled[k-1] = np.array(theta_uncoupled[k-1])
+  phi_uncoupled[k-1] = np.array(phi_uncoupled[k-1])
+  data_combined_uncoupled.append(np.empty(T*spacing*2))
+
+  for i in range(T*spacing):
+    data_combined_uncoupled[k-1][2*i] = theta_uncoupled[k-1][i]
+    data_combined_uncoupled[k-1][2*i+1] = phi_uncoupled[k-1][i]
+
+  data_embedded_uncoupled.append(STE.fit_transform(data_combined_uncoupled[k-1]))
+
+  # PH
+  data_embedded_uncoupled[k-1] = data_embedded_uncoupled[k-1][None, :, :]
+  %time periodic_persistence_diagrams_uncoupled.append(periodic_persistence.fit_transform(data_embedded_uncoupled[k-1]))
+
+  # PL
+  PersL_uncoupled.append(pl.fit_transform_plot(periodic_persistence_diagrams_uncoupled[k-1]))# form vector input for SVM using H1 and H2
+  # use first 2 layers in H1 and first layer in H2
+  #v_uncoupled.append(np.concatenate((PersL_uncoupled[k-1][0,3],PersL_uncoupled[k-1][0,4],PersL_uncoupled[k-1][0,6]), axis = 0))
+  v_uncoupled.append(np.concatenate((PersL_uncoupled[k-1][0,15],PersL_uncoupled[k-1][0,16], PersL_uncoupled[k-1][0,17] , PersL_uncoupled[k-1][0,18] , PersL_uncoupled[k-1][0,19],
+                                    PersL_uncoupled[k-1][0,20] , PersL_uncoupled[k-1][0,21] ,PersL_uncoupled[k-1][0,22] ,PersL_uncoupled[k-1][0,23] ,PersL_uncoupled[k-1][0,24] ,
+                                   PersL_uncoupled[k-1][0,25] ,PersL_uncoupled[k-1][0,26] ,PersL_uncoupled[k-1][0,27] ,PersL_uncoupled[k-1][0,28] ,PersL_uncoupled[k-1][0,29] ,
+                                   PersL_uncoupled[k-1][0,30] ,PersL_uncoupled[k-1][0,31] ,PersL_uncoupled[k-1][0,32] ,PersL_uncoupled[k-1][0,33] ,PersL_uncoupled[k-1][0,34] ,
+                                   PersL_uncoupled[k-1][0,35] ,PersL_uncoupled[k-1][0,36] ,PersL_uncoupled[k-1][0,37] ,PersL_uncoupled[k-1][0,38] ,PersL_uncoupled[k-1][0,39] ,
+                                   PersL_uncoupled[k-1][0,40] ,PersL_uncoupled[k-1][0,41] ,PersL_uncoupled[k-1][0,42] , PersL_uncoupled[k-1][0,43] ,PersL_uncoupled[k-1][0,44]), axis = 0))
+
+
+###### Plot the ones wanted
+
+k= 10
+print("k = {}, period = {}".format(k,T))
+plot_point_cloud(data_embedded_uncoupled[k-1])
+plot_diagram(periodic_persistence_diagrams_uncoupled[k-1][0])
+
