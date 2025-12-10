@@ -1,4 +1,4 @@
-# Identify-Couplings-of-Oscillatory-Data-Using-TDA
+# Identify Couplings of Oscillatory Data Using TDA
 
 I looked at coupled and uncoupled oscillators and use topological data analysis (TDA) and machine learning (ML) to identify the existence of coupling force. 
 
