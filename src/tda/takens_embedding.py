@@ -1,8 +1,8 @@
 from gtda.time_series import SingleTakensEmbedding
 
-def takens_embedding(data_combined, N, embedding_dimension_periodic = 6, embedding_time_delay_periodic = 5, stride = 2):
+def takens_embedding(data_combined, N, embedding_dimension = 6, embedding_time_delay = 5, stride = 2):
     '''
-    Compute taken's embedding with window size N
+    Compute taken's embedding with window size = embedding dimension
     '''
 #from PIL import Image
 #import pandas as pd
@@ -18,10 +18,10 @@ def takens_embedding(data_combined, N, embedding_dimension_periodic = 6, embeddi
     #embedding_dimension_periodic = 6
     #embedding_time_delay_periodic = 5
     #stride = 2
-    STE=SingleTakensEmbedding(parameters_type="fixed", time_delay=embedding_time_delay_periodic,
-        dimension=embedding_dimension_periodic,stride=stride)
+    STE=SingleTakensEmbedding(parameters_type="fixed", time_delay=embedding_time_delay,
+        dimension=embedding_dimension,stride=stride)
 
-    for k in range(1,N):
-        data_embedded.append(STE.fit_transform(data_combined[k-1]))
+    for k in range(N):
+        data_embedded.append(STE.fit_transform(data_combined[k]))
         
     return data_embedded
