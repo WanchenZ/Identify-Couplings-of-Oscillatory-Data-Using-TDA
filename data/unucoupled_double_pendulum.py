@@ -2,7 +2,7 @@ import math
 import numpy as np
 import random
 
-def generate_coupled_pendulum(N = 50, T = 30, spacing = 20):
+def generate_uncoupled_pendulum(N = 50, T = 30, spacing = 20):
   '''
   Generate data of double pendulum with different coupling constants
   N: number of datasets
@@ -25,7 +25,7 @@ def generate_coupled_pendulum(N = 50, T = 30, spacing = 20):
   #v_uncoupled = []
 #pl = PersistenceLandscape(n_layers=15, n_bins=50, n_jobs=None)
 
-  for k in range(1,N):
+  for k in range(1,N+1):
     w_1 = random.uniform(2.5, 8.5)
     w_2 = random.uniform(2.5, 8.5)
     phase = random.uniform(0, 6.28)
@@ -43,5 +43,5 @@ def generate_coupled_pendulum(N = 50, T = 30, spacing = 20):
       data_combined_uncoupled[k-1][2*i] = theta_uncoupled[k-1][i]
       data_combined_uncoupled[k-1][2*i+1] = phi_uncoupled[k-1][i]
 
-  return data_combined_uncoupled, N
+  return data_combined_uncoupled, theta_uncoupled, phi_uncoupled
 #  data_embedded_uncoupled.append(STE.fit_transform(data_combined_uncoupled[k-1]))

@@ -26,7 +26,7 @@ def generate_coupled_pendulum(N = 50, T = 30, spacing = 20):
 # taken's embedding
 #data_embedded = []
 
-  for k in range(1,N):
+  for k in range(1,N+1):
     w.append(math.sqrt((L + 1/2 * k * L * L) / I ))
     theta.append(np.cos( (w_0- w[k-1])/2 * t ) * np.cos( (w_0+ w[k-1])/2 * t ))
     phi.append(np.sin( (w_0-w[k-1])/2 * t ) * np.sin( (w_0+w[k-1])/2 * t ))
@@ -42,4 +42,4 @@ def generate_coupled_pendulum(N = 50, T = 30, spacing = 20):
       data_combined[k-1][2*i+1] = phi[k-1][i]
 
   #data_embedded.append(STE.fit_transform(data_combined[k-1]))
-  return data_combined
+  return data_combined, theta, phi
