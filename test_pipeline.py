@@ -11,8 +11,12 @@ from gtda.plotting import plot_point_cloud
 from persim import plot_diagrams
 
 # === Import functions FROM YOUR REPO ===
-from data import generate_coupled_pendulum, generate_uncoupled_pendulum
-from src.tda import takens_embedding, compute_pd, compute_pl
+from data.coupled_double_pendulum import generate_coupled_pendulum
+from data.unucoupled_double_pendulum import generate_uncoupled_pendulum
+from src.tda.takens_embedding import takens_embedding
+from src.tda.compute_pd import compute_pd
+from src.tda.compute_pl import compute_pl
+from src.ml.SVM_PCA import test_on_svm
 
 
 def plot_time_series(theta, phi, title):
@@ -30,20 +34,28 @@ def main():
     # -----------------------------
     # 1. Generate datasets
     # -----------------------------
-    combined_c, theta_c, phi_c = generate_coupled_pendulum(n_steps=2000)
-    combined_u, theta_u, phi_u = generate_uncoupled_pendulum(n_steps=2000)
+    N = 50
+    combined_c, theta_c, phi_c = generate_coupled_pendulum(N, spacing=200)[0:3]
+    combined_u, theta_u, phi_u = generate_uncoupled_pendulum(N, spacing=200)[0:3]
 
-    plot_time_series(theta_c, phi_c, "Coupled Pendulum")
-    plot_time_series(theta_u, phi_u, "Uncoupled Pendulum")
+    # Plot example time series
+    #index = 10
+    #plot_time_series(theta_c[index], phi_c[index], "Coupled Pendulum")
+    #print(theta_u[index])
+    #print(phi_u[index])
+    #plot_time_series(theta_u[index], phi_u[index], "Uncoupled Pendulum")
 
     # -----------------------------
     # 2. Takens embedding
     # -----------------------------
-    X_c = takens_embedding(combined_c, dim=3, delay=10)
-    X_u = takens_embedding(combined_u, dim=3, delay=10)
+    X_c = takens_embedding(combined_c, N)
+    X_u = takens_embedding(combined_u, N)
 
-    plot_point_cloud(X_c, title="Takens Embedding (Coupled)")
-    plot_point_cloud(X_u, title="Takens Embedding (Uncoupled)")
+    X_c = np.array(X_c)
+    X_u = np.array(X_u)
+
+    #plot_point_cloud(X_c)#, title="Takens Embedding (Coupled)")
+    #plot_point_cloud(X_u, title="Takens Embedding (Uncoupled)")
 
     # -----------------------------
     # 3. Persistence diagrams
@@ -51,8 +63,8 @@ def main():
     dgms_c = compute_pd(X_c)
     dgms_u = compute_pd(X_u)
 
-    plot_diagrams(dgms_c, title="PD (Coupled)")
-    plot_diagrams(dgms_u, title="PD (Uncoupled)")
+    #plot_diagram(dgms_c)
+    #plot_diagram(dgms_u)
 
     # -----------------------------
     # 4. Persistence landscapes
