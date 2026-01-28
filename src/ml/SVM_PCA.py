@@ -4,71 +4,69 @@
 Reduce the dimension using Principal Component Analysis
 Then apply Support Vector Machine with 20% training 80% testing
 Cross validation
-'''
+'''# more functions
+
 import numpy as np
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.decomposition import PCA
-from sklearn.svm import SVC
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from sklearn.decomposition import PCA
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
 def test_on_svm(v_coupled, v_uncoupled):
-
-# Concatenate the datasets
+    # 1. Dynamic label creation (Prevents the ValueError)
     X = np.concatenate((np.array(v_coupled), np.array(v_uncoupled)))
-    y = np.concatenate((np.ones(49), np.zeros(49)))
+    
+    y = np.concatenate((
+        np.ones(len(v_coupled)), 
+        np.zeros(len(v_uncoupled))
+    ))
 
-# Apply PCA to reduce dimensionality to 3
+    print(f"Dataset shape: {X.shape}, Labels shape: {y.shape}")
+
+    # 2. PCA to 3D
     pca = PCA(n_components=3)
     X_pca = pca.fit_transform(X)
 
-# Split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
+    # 3. Split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_pca, y, test_size=0.2, random_state=42
+    )
 
-# Train an SVM classifier
+    # 4. Train and Cross-Validate
     clf = SVC(kernel='linear')
-
-# Perform cross-validation
     cv_scores = cross_val_score(clf, X_pca, y, cv=5)
+    print(f"Average CV Accuracy: {np.mean(cv_scores):.2f}")
 
-# Output the cross-validation scores
-    print(f"Cross-Validation Scores: {cv_scores}")
-    print(f"Average Accuracy: {np.mean(cv_scores):.2f} (± {np.std(cv_scores):.2f})")
-
-# Fit the classifier on the training set
     clf.fit(X_train, y_train)
-
-# Make predictions on the test set
-    y_pred = clf.predict(X_test)
-
-# Compute accuracy
-    accuracy = accuracy_score(y_test, y_pred)
+    accuracy = accuracy_score(y_test, clf.predict(X_test))
     print(f"Test Accuracy: {accuracy:.2f}")
 
-# Plot the 3D decision boundary
-    fig = plt.figure(figsize=(8, 6))
+    # 5. Plotting
+    fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection='3d')
 
-# Plot the points in 3D
-    ax.scatter(X_test[:, 0], X_test[:, 1], X_test[:, 2], c=y_test, cmap=plt.cm.Paired, s=50)
+    # Plot Coupled (1) vs Uncoupled (0)
+    ax.scatter(X_pca[y==1, 0], X_pca[y==1, 1], X_pca[y==1, 2], 
+               color='blue', label='Coupled', alpha=0.6)
+    ax.scatter(X_pca[y==0, 0], X_pca[y==0, 1], X_pca[y==0, 2], 
+               color='red', label='Uncoupled', alpha=0.6)
 
-# Plot the training points in 3D
-    ax.scatter(X_train[:, 0], X_train[:, 1], X_train[:, 2], c=y_train, cmap=plt.cm.Paired, marker='x', s=100, label='Training Points')
+    # 6. Plot the 3D Decision Hyperplane (Linear)
+    # The equation is: w0*x + w1*y + w2*z + b = 0
+    # So: z = -(w0*x + w1*y + b) / w2
+    tmp_x = np.linspace(X_pca[:, 0].min(), X_pca[:, 0].max(), 10)
+    tmp_y = np.linspace(X_pca[:, 1].min(), X_pca[:, 1].max(), 10)
+    xx, yy = np.meshgrid(tmp_x, tmp_y)
+    
+    w = clf.coef_[0]
+    b = clf.intercept_[0]
+    zz = (-w[0] * xx - w[1] * yy - b) / w[2]
 
-# Plot the decision surface
-    xx, yy = np.meshgrid(np.linspace(X_test[:, 0].min(), X_test[:, 0].max(), 100),
-                     np.linspace(X_test[:, 1].min(), X_test[:, 1].max(), 100))
-    Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel(), np.zeros_like(xx.ravel())])
-    Z = Z.reshape(xx.shape)
-    ax.contour(xx, yy, Z, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])
+    ax.plot_surface(xx, yy, zz, alpha=0.2, color='green')
 
-# Set labels
-    ax.set_xlabel('Principal Component 1')
-    ax.set_ylabel('Principal Component 2')
-    ax.set_zlabel('Principal Component 3')
-    ax.set_title('SVM Decision Boundary in 3D')
-
+    ax.set_title('TDA Features: SVM Linear Separation (PCA Space)')
+    ax.legend()
     plt.show()
 
     return accuracy, cv_scores
